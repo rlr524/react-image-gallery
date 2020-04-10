@@ -1,32 +1,40 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import ImageCard from "./components/ImageCard";
+import Spinner from "./components/Spinner";
+import ImageSearch from "./components/ImageSearch";
 
 function App() {
+  const [images, setImages] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [term, setTerm] = useState("");
+
+  useEffect(() => {
+    fetch(
+      `https://pixabay.com/api/?key=${process.env.REACT_APP_PIXABAY_API_KEY}&q=${term}&image_type=photo&pretty=true`
+    )
+      .then((res) => res.json())
+      .then((data) => {
+        setImages(data.hits);
+        setIsLoading(false);
+      })
+      .catch((err) => console.log(err));
+  }, [term]);
+
   return (
-    <div className="max-w-sm rounded overflow-hidden shadow-lg">
-      <img
-        src="https://source.unsplash.com/random"
-        alt="Random Unsplash"
-        className="w-full"
-      />
-      <div className="px-6 py-4">
-        <div className="font-bold text-purple-500 text-xl mb-2">
-          Photo by Madison Hu
+    <div className="container mx-auto">
+      <ImageSearch searchText={(text) => setTerm(text)} />
+      {!isLoading && images.length === 0 && (
+        <h1 className="text-4xl text-center mx-auto mt-32">No Images Found</h1>
+      )}
+      {isLoading ? (
+        <Spinner />
+      ) : (
+        <div className="grid grid-cols-3 gap4">
+          {images.map((image) => (
+            <ImageCard key={image.id} image={image} />
+          ))}
         </div>
-        <ul>
-          <li>
-            <strong>Views: </strong>
-            4000
-          </li>
-          <li>
-            <strong>Downloads: </strong>
-            300
-          </li>
-          <li>
-            <strong>Likes: </strong>
-            400
-          </li>
-        </ul>
-      </div>
+      )}
     </div>
   );
 }
